@@ -5,11 +5,11 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Base de datos en memoria (para fines académicos y demostrativos)
+// Base de datos en memoria 
 let orders = [
     {
         id: 1,
-        cliente: "Ana María Gómez",
+        cliente: "Daniel Alejandro Carrillo",
         productos: "Laptop Gamer, Mouse RGB",
         cantidades: 2,
         direccion: "Calle 100 # 15-20, Bogotá",
