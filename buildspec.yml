@@ -1,0 +1,17 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      echo "=== Instalando dependencias del proyecto ==="
+      npm install
+  build:
+    commands:
+      echo "=== Compilando / Verificando aplicación ==="
+      npm test
+artifacts:
+  files:
+    - '**/*'
+  discard-paths: no
+  

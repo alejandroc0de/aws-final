@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Pedidos - DevOps AWS</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f6f8; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2 { color: #232f3e; }
+        form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; background: #eaeded; padding: 15px; border-radius: 6px; }
+        form input, form button { padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
+        form button { background: #ff9900; color: #111; font-weight: bold; border: none; cursor: pointer; grid-column: span 2; }
+        form button:hover { background: #e88b00; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #232f3e; color: white; }
+        select { padding: 5px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Plataforma de Gestión de Pedidos</h1>
+        <p>Demostración de CI/CD automatizado en AWS (Elastic Beanstalk + CodePipeline)</p>
+
+        <h2>Crear Nuevo Pedido</h2>
+        <form id="orderForm">
+            <input type="text" id="cliente" placeholder="Nombre del Cliente" required>
+            <input type="text" id="productos" placeholder="Productos solicitados" required>
+            <input type="number" id="cantidades" placeholder="Cantidad" min="1" required>
+            <input type="text" id="direccion" placeholder="Dirección de envío" required>
+            <button type="submit">Guardar Pedido</button>
+        </form>
+
+        <h2>Lista de Pedidos</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Productos</th>
+                    <th>Cant.</th>
+                    <th>Dirección</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+                <!-- Se llena mediante JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = '/api/orders';
+
+        async function loadOrders() {
+            try {
+                const res = await fetch(API_URL);
+                const orders = await res.json();
+                const tbody = document.getElementById('ordersTableBody');
+                tbody.innerHTML = '';
+
+                orders.forEach(order => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>#${order.id}</td>
+                        <td>${order.cliente}</td>
+                        <td>${order.productos}</td>
+                        <td>${order.cantidades}</td>
+                        <td>${order.direccion}</td>
+                        <td><strong>${order.estado}</strong></td>
+                        <td>
+                            <select onchange="updateStatus(${order.id}, this.value)">
+                                <option value="" disabled selected>Cambiar estado</option>
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="En Proceso">En Proceso</option>
+                                <option value="Enviado">Enviado</option>
+                                <option value="Entregado">Entregado</option>
+                            </select>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error("Error al cargar pedidos:", err);
+            }
+        }
+
+        document.getElementById('orderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newOrder = {
+                cliente: document.getElementById('cliente').value,
+                productos: document.getElementById('productos').value,
+                cantidades: document.getElementById('cantidades').value,
+                direccion: document.getElementById('direccion').value
+            };
+
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newOrder)
+            });
+
+            if (res.ok) {
+                document.getElementById('orderForm').reset();
+                loadOrders();
+            } else {
+                alert("Error al crear el pedido");
+            }
+        });
+
+        async function updateStatus(id, estado) {
+            const res = await fetch(`${API_URL}/${id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estado })
+            });
+
+            if (res.ok) {
+                loadOrders();
+            } else {
+                alert("Error al actualizar el estado");
+            }
+        }
+
+        // Cargar al iniciar
+        loadOrders();
+    </script>
+</body>
+</html>
